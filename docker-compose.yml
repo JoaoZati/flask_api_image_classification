@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "5000:5000"
+      - "10001:10001"
+    links:
+      - db
+    volumes:
+      - ./web:/web
+  db:
+    build: ./db
