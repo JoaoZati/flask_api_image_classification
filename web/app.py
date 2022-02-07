@@ -12,8 +12,6 @@ from pymongo import MongoClient
 from debugger import initialize_debugger
 
 import bcrypt
-import spacy
-import en_core_web_sm
 
 app = Flask(__name__)
 app.config.from_object('config.DevelopmentConfig')
@@ -33,13 +31,9 @@ def hello_word():
 def set_admin_in_db():
     try:
         admin_username = app.config['ADMIN_USERNAME']
-        password = app.config['ADMIN_PASSWORD']
-        if admin.find({"Admin": admin_username})[0]['Admin']:
-            print('Admin is already set')
-            hash_password = str(admin.find({"Admin": admin_username})[0]["Password"])
-            if not bcrypt.hashpw(password, hash_password) == hash_password:
-                print('Admin Password is diferent from config!')
+        admin.find({"Admin": admin_username})[0]['Admin']
     except Exception as e:
+        admin.delete_many({})
         hashed_password = bcrypt.hashpw(app.config['ADMIN_PASSWORD'], bcrypt.gensalt())
         admin.insert_one(
             {
@@ -50,7 +44,7 @@ def set_admin_in_db():
         print('Set Admin sucessfully!')
 
 
-def get_data(data=False):
+def get_data():
     status_code = 200
     message = "Ok"
 
@@ -60,18 +54,12 @@ def get_data(data=False):
         username = post_data["username"]
         password = post_data["password"]
 
-        if data:
-            text_1 = post_data["text_1"]
-            text_2 = post_data["text_2"]
     except Exception as e:
         status_code = 305
         message = str(e)
         username, password = [0] * 2
-        text_1, text_2 = [''] * 2
 
     list_return = [status_code, message, username, password]
-    if data:
-        list_return.extend([text_1, text_2])
 
     return list_return
 
@@ -102,15 +90,6 @@ def user_already_exist(username):
     except Exception as e:
         print(e)
     
-    return False
-
-
-def valid_username(username):
-    try:
-        users.find({"Username": username})[0]['Username']
-        return True
-    except Exception as e:
-        print(e)
     return False
 
 
@@ -198,7 +177,7 @@ class Register(Resource):
 
 class Detect(Resource):
     def post(self):
-        status_code, message, username, password, text_1, text_2 = get_data(data=True)
+        status_code, message, username, password = get_data()
 
         if status_code != 200:
             return jsonify(
@@ -227,13 +206,6 @@ class Detect(Resource):
             )
 
         try:
-            nlp = en_core_web_sm.load()
-
-            text_1 = nlp(text_1)
-            text_2 = nlp(text_2)
-
-            ratio = text_1.similarity(text_2) # Ratio 0 to 1, more close to 1 more similar;
-
             set_username_tokens(username, tokens - 1)
         except Exception as e:
             print(e)
@@ -249,7 +221,6 @@ class Detect(Resource):
                 'Status Code': status_code,
                 'Message': message,
                 'Tokens': tokens - 1,
-                "Similarity Ratio": ratio
             }
         )
 
@@ -267,7 +238,7 @@ class Refil(Resource):
                 }
             )
 
-        if not valid_username(username):
+        if not user_already_exist(username):
             return jsonify(
                 {
                     'Status Code': 302,
