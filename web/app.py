@@ -45,42 +45,46 @@ def set_admin_in_db():
 
 
 def get_data():
-    status_code = 200
-    message = "Ok"
+    dict_resp = {
+        'status_code': 200,
+        'message': 'Ok'
+    }
 
     try:
         post_data = request.get_json()
 
-        username = post_data["username"]
-        password = post_data["password"]
+        dict_resp['username'] = post_data["username"]
+        dict_resp['password'] = post_data["password"]
 
     except Exception as e:
-        status_code = 305
-        message = str(e)
-        username, password = [0] * 2
+        dict_resp = {
+        'status_code': 305,
+        'message': str(e)
+        }
 
-    list_return = [status_code, message, username, password]
-
-    return list_return
+    return dict_resp
 
 
 def get_data_admin():
-    status_code = 200
-    message = "Ok"
+    dict_resp = {
+        'status_code': 200,
+        'message': 'Ok'
+    }
 
     try:
         post_data = request.get_json()
 
-        username = str(post_data["username"])
-        admin_username = str(post_data["admin_username"])
-        admin_password = str(post_data["admin_password"])
-        refil_tokens = int(post_data["refil_tokens"])
+        dict_resp['username'] = str(post_data["username"])
+        dict_resp['admin_username'] = str(post_data["admin_username"])
+        dict_resp['admin_password'] = str(post_data["admin_password"])
+        dict_resp['refil_tokens'] = int(post_data["refil_tokens"])
     except Exception as e:
-        message = str(e)
-        status_code = 305
-        admin_password, admin_username, refil_tokens = [0]*3
+        dict_resp = {
+        'status_code': 305,
+        'message': str(e)
+        }
     
-    return status_code, message, username, admin_username, admin_password, refil_tokens
+    return dict_resp
 
 
 def user_already_exist(username):
@@ -139,15 +143,14 @@ def set_username_tokens(username, tokens):
 
 class Register(Resource):
     def post(self):
-        status_code, message, username, password = get_data()
+        dict_resp = get_data()
 
-        if status_code != 200:
-            return jsonify(
-                {
-                    'Status Code': status_code,
-                    'Message': message,
-                }
-            )
+        if dict_resp['status_code'] != 200:
+            return dict_resp
+        
+        username = dict_resp['username']
+        password = dict_resp['password']
+        tokens = 5
         
         if user_already_exist(username):
             return jsonify(
@@ -163,37 +166,28 @@ class Register(Resource):
             {
                 "Username": username,
                 "Password": hashed_password,
-                "Tokens": 5
+                "Tokens": tokens
             }
         )
 
-        return jsonify(
-            {
-                'Status Code': status_code,
-                'Message': message,
-            }
-        )
+        dict_resp['Tokens'] = tokens
+
+        return jsonify(dict_resp)
 
 
 class Detect(Resource):
     def post(self):
-        status_code, message, username, password = get_data()
+        dict_resp = get_data()
 
-        if status_code != 200:
-            return jsonify(
-                {
-                    'Status Code': status_code,
-                    'Message': message,
-                }
-            )
+        if dict_resp['status_code'] != 200:
+            return dict_resp
+        
+        username = dict_resp['username']
+        password = dict_resp['password']
         
         if not valid_user_and_passoword(username, password):
-            return jsonify(
-                {
-                    'Status Code': 302,
-                    'Message': "Invalid Username or Password",
-                }
-            )
+            dict_resp['message'] = "Invalid Username or Password"
+            return jsonify(dict_resp)
         
         tokens = get_tokens(username)
 
@@ -212,31 +206,28 @@ class Detect(Resource):
             return jsonify(
                 {
                     'Status Code': 305,
-                    'Message': "Sorry one internal error ocurred",
+                    'Message': "Sorry one internal error have ocurred",
                 }
             )
+        
+        "Setar função aqui"
 
-        return jsonify(
-            {
-                'Status Code': status_code,
-                'Message': message,
-                'Tokens': tokens - 1,
-            }
-        )
+        dict_resp['tokens'] = tokens - 1 
+
+        return jsonify(dict_resp)
 
 
 class Refil(Resource):
     def post(self):
-        status_code, message, username, \
-        admin_username, admin_password, refil_tokens = get_data_admin()
+        dict_result = get_data_admin()
 
-        if status_code != 200:
-            return jsonify(
-                {
-                    'Status Code': status_code,
-                    'Message': message,
-                }
-            )
+        if dict_result['status_code'] != 200:
+            return jsonify(dict_result)
+        
+        username = dict_result['username']
+        admin_username = dict_result['admin_username']
+        admin_password = dict_result['admin_password']
+        refil_tokens = dict_result['refil_tokens']
 
         if not user_already_exist(username):
             return jsonify(
@@ -258,14 +249,10 @@ class Refil(Resource):
         new_tokens = tokens + refil_tokens
         set_username_tokens(username, new_tokens)
 
-        return jsonify(
-            {
-                'Status Code': status_code,
-                'Message': message,
-                'Old Tokens': tokens,
-                'New Total Tokens': new_tokens,
-            }
-        )
+        dict_result['old_tokens'] = tokens
+        dict_result['new_tokens'] = new_tokens
+
+        return jsonify(dict_result)
 
 
 api.add_resource(Register, "/register")
