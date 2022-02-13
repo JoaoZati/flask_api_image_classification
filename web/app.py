@@ -5,6 +5,7 @@ Sotore a sentece for 1 token
 Retrive his stored sentence on our database for 1 token
 """
 
+from asyncio import subprocess
 from flask import Flask, jsonify, request
 from flask_restful import Api, Resource
 
@@ -12,6 +13,9 @@ from pymongo import MongoClient
 from debugger import initialize_debugger
 
 import bcrypt
+import requests
+
+from image_classification import predict
 
 app = Flask(__name__)
 app.config.from_object('config.DevelopmentConfig')
@@ -44,7 +48,7 @@ def set_admin_in_db():
         print('Set Admin sucessfully!')
 
 
-def get_data():
+def get_username_data():
     dict_resp = {
         'status_code': 200,
         'message': 'Ok'
@@ -141,9 +145,28 @@ def set_username_tokens(username, tokens):
     )
 
 
+def get_url_data(dict_resp):
+    try:
+        post_data = request.get_json()
+
+        dict_resp['url'] = post_data["url"]
+    except Exception as e:
+        dict_resp['status_code'] = 305
+        dict_resp['message'] = str(e)
+
+
+def classify(url):
+    r = requests.get(url)
+
+    with open("temp.jpg", "wb") as f:
+        f.write(r.content)
+    
+    return predict("temp.jpg")
+
+
 class Register(Resource):
     def post(self):
-        dict_resp = get_data()
+        dict_resp = get_username_data()
 
         if dict_resp['status_code'] != 200:
             return dict_resp
@@ -175,9 +198,10 @@ class Register(Resource):
         return jsonify(dict_resp)
 
 
-class Detect(Resource):
+class Classify(Resource):
     def post(self):
-        dict_resp = get_data()
+        dict_resp = get_username_data()
+        get_url_data(dict_resp)
 
         if dict_resp['status_code'] != 200:
             return dict_resp
@@ -198,6 +222,17 @@ class Detect(Resource):
                     'Message': "You dont have enouth tokens",
                 }
             )
+        
+        try:
+            dict_json = classify(dict_resp['url'])
+        except Exception as e:
+            print(e)
+            return jsonify(
+                {
+                    'Status Code': 305,
+                    'Message': "Sorry one internal error have ocurred",
+                }
+            )
 
         try:
             set_username_tokens(username, tokens - 1)
@@ -212,9 +247,9 @@ class Detect(Resource):
         
         "Setar função aqui"
 
-        dict_resp['tokens'] = tokens - 1 
+        dict_json['tokens'] = tokens - 1 
 
-        return jsonify(dict_resp)
+        return dict_json
 
 
 class Refil(Resource):
@@ -256,7 +291,7 @@ class Refil(Resource):
 
 
 api.add_resource(Register, "/register")
-api.add_resource(Detect, "/detect")
+api.add_resource(Classify, "/classify")
 api.add_resource(Refil, "/refil")
 
 if __name__ == '__main__':

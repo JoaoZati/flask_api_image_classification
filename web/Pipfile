@@ -12,6 +12,9 @@ debugpy = "*"
 python-bcrypt = "*"
 tensorflow = "*"
 requests = "*"
+numpy = "*"
+image = "*"
+pillow = "*"
 
 [dev-packages]
 
