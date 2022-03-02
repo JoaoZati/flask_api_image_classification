@@ -1,12 +1,5 @@
-"""
-Registration of a User
-Each user get 10 tokens 
-Sotore a sentece for 1 token
-Retrive his stored sentence on our database for 1 token
-"""
-
 from asyncio import subprocess
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_restful import Api, Resource
 
 from pymongo import MongoClient
@@ -14,6 +7,7 @@ from debugger import initialize_debugger
 
 import bcrypt
 import requests
+import os
 
 from image_classification import predict
 
@@ -29,7 +23,7 @@ admin = db["Admin"]
 
 @app.route('/')
 def hello_word():
-    return 'Hello Word'
+    return render_template('index.html')
 
 
 def set_admin_in_db():
@@ -160,8 +154,14 @@ def classify(url):
 
     with open("temp.jpg", "wb") as f:
         f.write(r.content)
+        json_classify = predict("temp.jpg")
     
-    return predict("temp.jpg")
+    if os.path.exists("temp.jpg"):
+        os.remove("temp.jpg")
+    else:
+        print("The file does not exist")
+    
+    return json_classify
 
 
 class Register(Resource):
@@ -244,8 +244,6 @@ class Classify(Resource):
                     'Message': "Sorry one internal error have ocurred",
                 }
             )
-        
-        "Setar função aqui"
 
         dict_json['tokens'] = tokens - 1 
 

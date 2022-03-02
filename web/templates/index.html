@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image_classification</title>
+</head>
+<body>
+    <div class="container-fluid">
+        <h2>Objetivo da aplicação</h2>
+        <p>
+            O objetivo dessa aplicação é aplicar o conhecimento de geração de api com flask, utilização
+            do banco de dados MongoDB, conhecimentos básicos da biblioteca tensorflow e o deploy da aplicação
+            utilizando docker na AWS. 
+        </p>
+        <br>
+        <p>
+            Se gostou da aplicação tem uma similar no meu github que seria uma simulação de uma conta bancária
+            <a href="https://github.com/JoaoZati/flask_api_bank_account">github.com/JoaoZati/flask_api_bank_account</a>
+        </p>
+        <br>
+        <p>Se gostou da minha aplicação e deseja mais tokens entre em contato <a href="mailto:joaozati@gmail.com">joaozati@gmail.com</a></p>
+        <br>
+        <p>
+            Nota: se você não sabe lidar com apis, basta baixar o aplicativo Postman e enviar um POST com
+            um body contendo um json com as informações abaixo. Para mais detalhes entre em contato.
+        </p>
+        <br>
+        <h2>Comandos</h2>
+        <br>
+        <p>
+            /register -> registra um usuario para utilizar, no corpo deve conter:
+            username, password
+        </p>
+        <br>
+        <p>
+            /classify -> Retorna o classificação de uma imagem que você mandar,
+            consome 1 token e no corpo deve conter:
+            username, password e url (url deve ter no final .jpg)
+        </p>
+        <br>
+        <p>
+            /Refil -> utilizado pelo admin para adicionar tokens 
+            (qualquer duvida entres em contato no email <a href="mailto:joaozati@gmail.com">joaozati@gmail.com</a>)
+        </p>
+    </div>
+</body>
+</html>
